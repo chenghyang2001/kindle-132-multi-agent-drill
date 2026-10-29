@@ -61,15 +61,18 @@ find "$TMP" -type f | wc -l
 ## 步驟 3：先預覽（不會動任何檔案）
 
 ```bash
-[ -n "$TMP" ] || echo "TMP 是空的，請回步驟 1"
-ls -R "$TMP" > "$TMP-before.txt"      # 先存一份「執行前」清單（存在 $TMP 外面）
-PYTHONUTF8=1 python organize_downloads.py "$TMP"
+if [ -z "$TMP" ]; then
+  echo "TMP 是空的，請回步驟 1"
+else
+  ls -R "$TMP" > "$TMP-before.txt"      # 先存一份「執行前」清單（存在 $TMP 外面）
+  PYTHONUTF8=1 python organize_downloads.py "$TMP"
+fi
 ```
 
-如果第一行印出 `TMP 是空的，請回步驟 1`，**不要往下做**，先回步驟 1、2 重建。
-（就算忘了檢查，程式也會印 `錯誤：沒有指定資料夾（$TMP 可能是空的，請回步驟 1 重新建立）` 並停下，不會整理目前的資料夾。）
+整段一起貼上即可。`TMP` 是空的時，只會印 `TMP 是空的，請回步驟 1`，其他指令**都不會執行**（不會產生 `-before.txt`），這時回步驟 1、2 重建。
+（就算漏了檢查，程式也會印 `錯誤：沒有指定資料夾（$TMP 可能是空的，請回步驟 1 重新建立）` 並停下，不會整理目前的資料夾。）
 
-**你應該看到**（`TMP` 正常時第一行不會印任何東西）：
+**你應該看到**：
 
 ```text
 notes.txt -> documents/notes.txt
@@ -102,11 +105,14 @@ ls -R "$TMP" | diff "$TMP-before.txt" - && echo "預覽沒改檔"
 ## 步驟 5：加 `--apply` 實際移動
 
 ```bash
-[ -n "$TMP" ] || echo "TMP 是空的，請回步驟 1"
-PYTHONUTF8=1 python organize_downloads.py "$TMP" --apply
+if [ -z "$TMP" ]; then
+  echo "TMP 是空的，請回步驟 1"
+else
+  PYTHONUTF8=1 python organize_downloads.py "$TMP" --apply
+fi
 ```
 
-第一行若印出 `TMP 是空的，請回步驟 1`，代表終端機重開過，回步驟 1 重來。
+若只印出 `TMP 是空的，請回步驟 1`，代表終端機重開過，程式沒有執行，回步驟 1 重來。
 
 **你應該看到**：
 
@@ -143,11 +149,14 @@ find "$TMP" -type f | wc -l
 ## 步驟 7（加碼）：試試錯誤情況
 
 ```bash
-[ -n "$TMP" ] || echo "TMP 是空的，請回步驟 1"
-PYTHONUTF8=1 python organize_downloads.py "$TMP/不存在"; echo "exit code = $?"
-mkdir "$TMP/empty"
-PYTHONUTF8=1 python organize_downloads.py "$TMP/empty"; echo "exit code = $?"
-PYTHONUTF8=1 python organize_downloads.py ""; echo "exit code = $?"
+if [ -z "$TMP" ]; then
+  echo "TMP 是空的，請回步驟 1"
+else
+  PYTHONUTF8=1 python organize_downloads.py "$TMP/不存在"; echo "exit code = $?"
+  mkdir "$TMP/empty"
+  PYTHONUTF8=1 python organize_downloads.py "$TMP/empty"; echo "exit code = $?"
+  PYTHONUTF8=1 python organize_downloads.py ""; echo "exit code = $?"
+fi
 ```
 
 **你應該看到**：
