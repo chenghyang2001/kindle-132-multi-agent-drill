@@ -1,0 +1,1 @@
+請讀 out/prompt-程式-fix2.md 並照做；完成後建立 out/程式-fix2.done。

@@ -1,0 +1,1 @@
+請讀 out/prompt-試學-recheck.md 並照做；完成後建立 out/試學-recheck.done。

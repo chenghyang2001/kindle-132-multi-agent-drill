@@ -1,0 +1,43 @@
+[unittest] Ran 9 tests in 0.077s
+[unittest] 
+[unittest] OK
+TMP=C:/Users/USER/AppData/Local/Temp/tmp.K1GalnfUbG/dl
+前：總數 9
+$ python organize_downloads.py "$TMP"
+notes.txt -> documents/notes.txt
+photo.JPG -> images/photo.JPG
+README -> no_extension/README
+report.txt -> documents/report_1.txt
+report_1.txt -> documents/report_1_1.txt
+script.py -> code/script.py
+table.csv -> data/table.csv
+這是預覽，加 --apply 才會實際移動。
+exit=0
+預覽前後 diff：無差異（不改檔）
+$ python organize_downloads.py "$TMP" --apply
+已移動：notes.txt -> documents/notes.txt
+已移動：photo.JPG -> images/photo.JPG
+已移動：README -> no_extension/README
+已移動：report.txt -> documents/report_1.txt
+已移動：report_1.txt -> documents/report_1_1.txt
+已移動：script.py -> code/script.py
+已移動：table.csv -> data/table.csv
+完成：已移動 7 個檔案。
+exit=0
+$ find . -type f | sort
+./code/script.py
+./data/table.csv
+./documents/notes.txt
+./documents/report.txt
+./documents/report_1.txt
+./documents/report_1_1.txt
+./images/photo.JPG
+./no_extension/README
+./subdir/nested.txt
+後：總數 9
+$ python organize_downloads.py "" --apply
+錯誤：沒有指定資料夾（$TMP 可能是空的，請回步驟 1 重新建立）
+exit=2
+$ python organize_downloads.py "$EMPTY"
+沒有要整理的檔案
+exit=0

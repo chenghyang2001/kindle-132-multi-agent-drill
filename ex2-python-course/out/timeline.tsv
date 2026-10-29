@@ -1,0 +1,20 @@
+1793316280	主 Agent 開始：讀 TASK 與 ORCHESTRATION
+1793316289	開子 Agent 視窗（教學設計、程式、試學）
+1793316349	教學設計 Agent 收到任務
+1793316454	教學設計.done 出現
+1793316472	驗收 curriculum.md：6 堂課、恰好三題練習，通過
+1793316473	程式 Agent 收到任務
+1793316616	程式.done 出現
+1793316630	退回修正：教學設計 Agent 修 mktemp 路徑（程式 Agent 回報）
+1793316677	教學設計-fix.done 出現，curriculum 已改用 cygpath -m
+1793316679	試學 Agent 收到任務
+1793316850	試學.done 出現
+1793316873	退回修正：程式 Agent（O-1 空 TMP、O-5、O-6）＋教學設計 Agent（O-1~O-4）同時修
+1793316978	程式-fix.done、教學設計-fix2.done 出現
+1793316985	試學 Agent 收到重驗任務
+1793317179	試學-recheck.done：O-1~O-6 已解決，新增低嚴重度 N-1、N-2
+1793317185	退回修正：程式 Agent（N-1）＋教學設計 Agent（N-2）
+1793317256	程式-fix2.done、教學設計-fix3.done 出現；主 Agent 開始自行驗收
+1793317279	主 Agent 自行驗收：9 測試 OK、預覽不改檔、apply 後總數 9→9、空 TMP exit 2
+1793317313	REPORT.md 完成，關閉子 Agent 視窗
+1793317315	實例二完成（ALL.done）
