@@ -1,2 +1,3 @@
 out/_*.txt
 out/_acc.txt
+.claude/session-state.md
