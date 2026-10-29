@@ -17,4 +17,5 @@ assert.deepEqual(searchItems("   ", items), []);
 assert.deepEqual(searchItems("", items), []);
 assert.deepEqual(searchItems("不存在", items), []);
 assert.deepEqual(searchItems(null, items), []);
-console.log("5 個搜尋情境全部通過");
+assert.deepEqual(searchItems(undefined, items), []);
+console.log("6 個搜尋情境全部通過");
