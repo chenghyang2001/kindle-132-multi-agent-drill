@@ -8,3 +8,4 @@
 1793317608	Review: 0 must-fix, 3 optional suggestions; no bounce-back
 1793317612	Acceptance: faulty=1 (with whitespace query failed), search.js=0, default=0 — all passed
 1793317632	REPORT.md written; closing sub-agent windows
+1793317634	Done: commit 修復搜尋空白輸入, created ALL.done
