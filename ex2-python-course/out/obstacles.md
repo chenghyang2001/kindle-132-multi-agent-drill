@@ -20,3 +20,27 @@
 - 測試：任務指定的 `python -m unittest discover -s . -p 'test_*.py' -v` 不加 `PYTHONUTF8` 也是 8 項全過。
 - 三題練習的預期解：跟實際執行結果完全一致。
 - 沒有修改任何程式或教材，也沒有碰 `~/Downloads`。
+
+---
+
+## 重驗結果
+
+> 依 `out/prompt-試學-recheck.md` 重驗（受驗版本 `748ca0a` + `8a51ca9`），實際命令與輸出見 `out/trial-log.md`「重驗（第 2 輪）」。
+
+| 編號 | 結果 | 證據 |
+| --- | --- | --- |
+| O-1 | ✅ 已解決 | 程式 `main()` 遇到空白來源會 exit 2，訊息為 `錯誤：沒有指定資料夾（$TMP 可能是空的，請回步驟 1 重新建立）`。實測 `TMP=""` 的預覽、`--apply`、`"   " --apply` 都是 exit 2，目前資料夾 `diff` 無差異、檔案 3 → 3（trial-log R1）。新增測試 `test_empty_source_argument` 通過。steps.md 步驟 1 加了「TMP 只存在這個視窗」的警告，步驟 3／5／7 加了檢查行；curriculum 安全原則加了第 5 條。（檢查行本身的小缺點見 N-1。） |
+| O-2 | ✅ 已解決（文件面） | curriculum 第 1 堂新增「怎麼進出 Python 互動模式」：`python` → `>>>`、卡住時按 Ctrl+C 改用 `winpty python`、`exit()` 離開，另提供 `lesson1.py` 替代做法。**待驗證**：Git Bash 互動模式會不會卡住，以及 `winpty` 能不能解決，我的環境不是互動式終端機，仍無法實測；替代做法 `python lesson1.py` 等同 `python -c`，已確認可行。 |
+| O-3 | ✅ 已解決 | 第 2～5 堂都指定了練習檔名和執行方式，並附起手式；第 3、5 堂說明 `sys.argv[1]` 就是 `$TMP`。四個起手式原樣執行都能跑，輸出合理（trial-log R3）。 |
+| O-4 | ✅ 已解決 | 練習二改用 `"$TMP-before.txt"`／`"$TMP-after.txt"`，跟 steps.md 一致，並新增第 6 步清理 `rm -f`。 |
+| O-5 | ✅ 已解決 | 錯誤訊息改用 `as_posix()`。實測 `錯誤：找不到資料夾 C:/Users/.../tmp.sJpQY3ELWh/不存在`、`錯誤：C:/.../images/photo.JPG 不是資料夾`，都是斜線；測試也多了 `assertNotIn("\\", err)`。steps.md 步驟 7 的預期同步改了。 |
+| O-6 | ✅ 已解決 | steps.md 步驟 0 加註「可能還有 `TASK.md`、`out`、`__pycache__` 等，不用理會」；步驟 2 加註「排列方式可能不同，例如一行一個」。 |
+
+### 新發現的障礙
+
+| 編號 | 位置（哪份文件哪一步） | 障礙描述 | 嚴重度（高/中/低） | 建議修正 | 該退回給（教學設計/程式） |
+| --- | --- | --- | --- | --- | --- |
+| N-1 | `steps.md` 步驟 3（同樣寫法見步驟 5、7） | `[ -n "$TMP" ] \|\| echo "TMP 是空的，請回步驟 1"` 只印提示、不會中止。初學者把整段一起貼上時，下一行 `ls -R "$TMP" > "$TMP-before.txt"` 照樣執行，會在目前資料夾（通常是課程資料夾）建立一個空檔 `-before.txt`。檔名開頭是 `-`，初學者用 `rm -before.txt` 刪不掉（要 `rm -- -before.txt`）。程式本身有擋住，不會搬檔，所以只是留下垃圾檔。 | 低 | 把檢查行獨立成一個程式碼區塊，寫明「看到這行就停」；或把步驟 3 的指令包成 `if [ -z "$TMP" ]; then echo "TMP 是空的，請回步驟 1"; else ls -R "$TMP" > "$TMP-before.txt" && PYTHONUTF8=1 python organize_downloads.py "$TMP"; fi`。 | 教學設計 |
+| N-2 | `curriculum.md` 第 3、5 堂起手式（`folder = Path(sys.argv[1])`） | 執行時漏掉 `"$TMP"`（只打 `python lesson3.py`）會出現一大段 `IndexError: list index out of range` traceback，初學者看不懂。另外如果 `$TMP` 是空的，`Path("")` 會掃描目前資料夾；這只是讀取、不會搬檔，但印出的是課程資料夾的清單，容易讓人搞混。 | 低 | 起手式加防呆：參數不足或是空字串時，印出用法 `python lesson3.py "$TMP"`（TMP 不可為空）並 `sys.exit(2)`；或在小活動說明「看到 IndexError 代表忘了加 "$TMP"」。 | 教學設計 |
+
+結論：上一輪的 6 項障礙都已解決，O-2 有一部分因環境限制仍待驗證；新發現 2 項都是低嚴重度，不影響安全，也不影響主流程。

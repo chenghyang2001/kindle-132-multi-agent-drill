@@ -440,3 +440,231 @@ exit=0
 ```
 
 `Path("")` 等於 `.`，也就是目前所在的資料夾。如果使用者正照 steps.md 步驟 0 待在課程資料夾裡，再跑步驟 5 的 `--apply`，課程檔案（包括 `organize_downloads.py` 本身）就會被搬進 `code/`、`documents/`。詳見障礙 O-1。
+
+---
+
+## 重驗（第 2 輪）
+
+- 日期：2026-10-30，依 `out/prompt-試學-recheck.md`。
+- 受驗版本：commit `748ca0a`（curriculum 第 2 輪）＋ `8a51ca9`（程式、測試、steps.md 修正）。
+- 規則同上：只用 `cygpath -m "$(mktemp -d)"` 臨時資料夾，沒有碰 `~/Downloads`，沒有修改程式或教材。以下都是實際命令與輸出。
+
+### 重驗總結
+
+| 項目 | 結果 |
+| --- | --- |
+| O-1：`TMP=""` 時預覽和 `--apply` | ✅ 兩者都 exit 2，目前資料夾的檔案沒動（`diff` 無差異，3 → 3） |
+| O-2～O-6：文件修正 | ✅ 都已修正（逐項證據見 `out/obstacles.md`「重驗結果」） |
+| 完整流程（steps.md 步驟 1～9） | ✅ 預覽不改檔、apply 7 個、`report_1_1.txt` 有產生、`subdir/nested.txt` 沒動、檔案總數 9 → 9 |
+| 測試 | ✅ `Ran 9 tests ... OK`（加不加 `PYTHONUTF8` 都過） |
+| 課程資料夾本身 | ✅ 重跑前後 `git status --porcelain` 和 `ls -A` 完全相同 |
+| 新發現 | 2 項低嚴重度（N-1、N-2，見 obstacles.md） |
+
+### R1：O-1 空 `$TMP`（在臨時資料夾裡模擬課程資料夾）
+
+（`$COURSE` 是課程資料夾，用 `cygpath -m` 轉過的路徑。）
+
+```text
+$ cd $W   # W=C:/Users/USER/AppData/Local/Temp/tmp.Js87znY9QQ
+$ touch curriculum.md organize_downloads.py steps.md
+$ TMP=""
+$ ls -R . > "$W-before.txt"; find . -type f | wc -l
+3
+$ PYTHONUTF8=1 python "$COURSE/organize_downloads.py" "$TMP"; echo "exit code = $?"
+錯誤：沒有指定資料夾（$TMP 可能是空的，請回步驟 1 重新建立）
+exit code = 2
+$ PYTHONUTF8=1 python "$COURSE/organize_downloads.py" "$TMP" --apply; echo "exit code = $?"
+錯誤：沒有指定資料夾（$TMP 可能是空的，請回步驟 1 重新建立）
+exit code = 2
+$ PYTHONUTF8=1 python "$COURSE/organize_downloads.py" "   " --apply; echo "exit code = $?"
+錯誤：沒有指定資料夾（$TMP 可能是空的，請回步驟 1 重新建立）
+exit code = 2
+$ ls -R . | diff "$W-before.txt" - && echo "檔案沒動"; find . -type f | wc -l
+檔案沒動
+3
+```
+
+符合預期：exit 2，檔案沒動。
+
+#### TMP 是空的時候，把 steps.md 步驟 3 整段貼上
+
+```text
+$ [ -n "$TMP" ] || echo "TMP 是空的，請回步驟 1"
+ls -R "$TMP" > "$TMP-before.txt"
+PYTHONUTF8=1 python "$COURSE/organize_downloads.py" "$TMP"
+TMP 是空的，請回步驟 1
+ls: cannot access '': No such file or directory
+錯誤：沒有指定資料夾（$TMP 可能是空的，請回步驟 1 重新建立）
+[rc=2]
+
+$ ls -A
+-before.txt
+curriculum.md
+organize_downloads.py
+steps.md
+```
+
+程式本身有擋住，但檢查行只印提示、不會中止後面的指令，所以目前資料夾多了一個空的 `-before.txt`（新障礙 N-1）。
+
+### R2：照修正後的 steps.md 重跑完整流程
+
+```text
+$ TMP=$(cygpath -m "$(mktemp -d)")
+$ echo "$TMP"
+C:/Users/USER/AppData/Local/Temp/tmp.sJpQY3ELWh
+$ mkdir -p "$TMP/documents" "$TMP/subdir"
+$ touch "$TMP/photo.JPG" "$TMP/notes.txt" "$TMP/table.csv" "$TMP/script.py" "$TMP/README"
+$ touch "$TMP/report.txt" "$TMP/report_1.txt" "$TMP/subdir/nested.txt"
+$ touch "$TMP/documents/report.txt"
+$ ls "$TMP"
+README
+documents
+notes.txt
+photo.JPG
+report.txt
+report_1.txt
+script.py
+subdir
+table.csv
+$ find "$TMP" -type f | wc -l
+9
+
+# 步驟 3
+$ [ -n "$TMP" ] || echo "TMP 是空的，請回步驟 1"
+（無輸出）
+$ ls -R "$TMP" > "$TMP-before.txt"
+$ PYTHONUTF8=1 python organize_downloads.py "$TMP"
+notes.txt -> documents/notes.txt
+photo.JPG -> images/photo.JPG
+README -> no_extension/README
+report.txt -> documents/report_1.txt
+report_1.txt -> documents/report_1_1.txt
+script.py -> code/script.py
+table.csv -> data/table.csv
+這是預覽，加 --apply 才會實際移動。
+
+# 步驟 4
+$ ls -R "$TMP" | diff "$TMP-before.txt" - && echo "預覽沒改檔"
+預覽沒改檔
+
+# 步驟 5
+$ [ -n "$TMP" ] || echo "TMP 是空的，請回步驟 1"
+（無輸出）
+$ PYTHONUTF8=1 python organize_downloads.py "$TMP" --apply
+已移動：notes.txt -> documents/notes.txt
+已移動：photo.JPG -> images/photo.JPG
+已移動：README -> no_extension/README
+已移動：report.txt -> documents/report_1.txt
+已移動：report_1.txt -> documents/report_1_1.txt
+已移動：script.py -> code/script.py
+已移動：table.csv -> data/table.csv
+完成：已移動 7 個檔案。
+
+# 步驟 6（路徑前綴用 sed 換成 $TMP 方便閱讀）
+$ ls -R "$TMP" | sed "s#$TMP#\$TMP#"
+$TMP:
+code
+data
+documents
+images
+no_extension
+subdir
+
+$TMP/code:
+script.py
+
+$TMP/data:
+table.csv
+
+$TMP/documents:
+notes.txt
+report.txt
+report_1.txt
+report_1_1.txt
+
+$TMP/images:
+photo.JPG
+
+$TMP/no_extension:
+README
+
+$TMP/subdir:
+nested.txt
+$ find "$TMP" -type f | wc -l
+9
+
+# 步驟 7
+$ PYTHONUTF8=1 python organize_downloads.py "$TMP/不存在"; echo "exit code = $?"
+錯誤：找不到資料夾 C:/Users/USER/AppData/Local/Temp/tmp.sJpQY3ELWh/不存在
+exit code = 2
+$ mkdir "$TMP/empty"
+$ PYTHONUTF8=1 python organize_downloads.py "$TMP/empty"; echo "exit code = $?"
+沒有要整理的檔案
+exit code = 0
+$ PYTHONUTF8=1 python organize_downloads.py ""; echo "exit code = $?"
+錯誤：沒有指定資料夾（$TMP 可能是空的，請回步驟 1 重新建立）
+exit code = 2
+$ PYTHONUTF8=1 python organize_downloads.py "$TMP/images/photo.JPG"; echo "exit code = $?"   # 額外
+錯誤：C:/Users/USER/AppData/Local/Temp/tmp.sJpQY3ELWh/images/photo.JPG 不是資料夾
+exit code = 2
+
+# 步驟 8
+$ python -m unittest discover -s . -p 'test_*.py' -v
+test_bad_source_exit_code (test_organize_downloads.OrganizeDownloadsTest.test_bad_source_exit_code) ... ok
+test_categories_case_insensitive (test_organize_downloads.OrganizeDownloadsTest.test_categories_case_insensitive) ... ok
+test_empty_folder (test_organize_downloads.OrganizeDownloadsTest.test_empty_folder) ... ok
+test_empty_source_argument (test_organize_downloads.OrganizeDownloadsTest.test_empty_source_argument) ... ok
+test_existing_target_collision (test_organize_downloads.OrganizeDownloadsTest.test_existing_target_collision) ... ok
+test_no_extension (test_organize_downloads.OrganizeDownloadsTest.test_no_extension) ... ok
+test_preview_does_not_change_files (test_organize_downloads.OrganizeDownloadsTest.test_preview_does_not_change_files) ... ok
+test_same_batch_collision (test_organize_downloads.OrganizeDownloadsTest.test_same_batch_collision) ... ok
+test_subdir_not_moved (test_organize_downloads.OrganizeDownloadsTest.test_subdir_not_moved) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.041s
+
+OK
+$ PYTHONUTF8=1 python -m unittest discover -s . -p 'test_*.py' 2>&1 | tail -3
+Ran 9 tests in 0.044s
+
+OK
+
+# 步驟 9
+$ rm -rf "$TMP" "$TMP-before.txt"
+$ ls "$TMP" 2>&1
+ls: cannot access 'C:/Users/USER/AppData/Local/Temp/tmp.sJpQY3ELWh': No such file or directory
+
+# 課程資料夾檢查（重跑前後比對 git status --porcelain 與 ls -A）
+課程資料夾前後一致（git status + ls -A 相同）
+```
+
+每一步都符合 steps.md 的「你應該看到」。錯誤訊息現在用斜線，跟輸入一致；步驟 7 新加的空字串案例也照 steps.md 回 exit 2。
+
+### R3：原樣執行課綱第 2～5 堂的起手式
+
+把 curriculum.md 的起手式原樣存成 `lesson2.py`～`lesson5.py`，放在另一個臨時資料夾裡（`$TMP` 裡有 photo.JPG、notes.txt、README、subdir/nested.txt）：
+
+```text
+$ python lesson2.py
+images
+$ python lesson3.py "$TMP"
+notes.txt
+photo.JPG
+README
+subdir
+$ python lesson4.py
+photo.JPG -> others
+notes.txt -> others
+README -> no_extension
+$ python lesson5.py "$TMP"
+notes.txt -> others/notes.txt
+photo.JPG -> images/photo.JPG
+README -> no_extension/README
+$ python lesson3.py        # 初學者忘了加 "$TMP"
+  File "...\lesson3.py", line 4, in <module>
+    folder = Path(sys.argv[1])   # 命令列第一個參數 = 要掃描的資料夾
+                  ~~~~~~~~^^^
+IndexError: list index out of range
+```
+
+四個起手式都能直接跑，結果就是「還沒補完」時應有的樣子：lesson3 還會印出 `subdir`，lesson4 的 photo.JPG 還是 others，正等學員補上判斷。漏掉參數時會出現 traceback（新障礙 N-2）。
