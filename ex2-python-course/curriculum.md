@@ -44,6 +44,9 @@
 2. **先預覽，再 `--apply`。** 預覽只印清單、不改任何檔案；看過清單沒問題才加 `--apply`。
 3. **不覆寫。** 目的地已有同名檔案時，程式一律改名（加 `_1`、`_2`…），不會蓋掉舊檔。
 4. 練習結束後刪掉臨時資料夾（`rm -rf "$TMP"`，**只刪你自己用 `TMP=$(cygpath -m "$(mktemp -d)")` 建的那個**）。
+5. **執行程式前先確認 `$TMP` 有值：`[ -n "$TMP" ] && echo "TMP=$TMP" || echo "TMP 是空的，請先重建"`。**
+   - 關掉終端機（或開新分頁）後，變數 `TMP` 會不見，必須重新執行建立指令並重建假資料。
+   - **永遠不要在課程資料夾裡對空的 `$TMP` 執行 `--apply`**：`"$TMP"` 是空字串時，你等於沒指定來源資料夾。目前程式遇到空字串會印錯誤並以 exit code 2 結束，但養成先檢查的習慣才是真正的保護。
 
 建立臨時練習資料夾的標準做法（每堂課都會用到）：
 
@@ -76,8 +79,13 @@ ls "$TMP"
   - 用 `pathlib.Path` 把字串變成路徑物件，取出檔名（`.name`）、主檔名（`.stem`）、副檔名（`.suffix`）。
   - 副檔名大小寫不一定一致（`.JPG`、`.jpg`），要用 `.lower()` 統一。
 - **程式概念**：變數指派、字串、`from pathlib import Path`、`.name` / `.stem` / `.suffix`、`.lower()`、`print()`。
+- **怎麼進出 Python 互動模式**
+  - 在終端機輸入 `python` 按 Enter，看到 `>>>` 提示符號就代表進入互動模式，可以一行一行輸入程式。
+  - Git Bash 輸入 `python` 後若卡住沒反應（看不到 `>>>`），按 `Ctrl+C` 中斷，改輸入 `winpty python`。
+  - 要離開時輸入 `exit()` 按 Enter，回到終端機。
+  - **替代做法**：不用互動模式，把下面的程式存成 `lesson1.py`，再執行 `python lesson1.py`，效果一樣（存檔的做法也方便之後修改重跑）。
 - **小活動**
-  1. 在 Python 互動模式輸入：
+  1. 在 Python 互動模式（或 `lesson1.py`）輸入：
 
      ```python
      from pathlib import Path
@@ -96,8 +104,22 @@ ls "$TMP"
   - `in` 可以檢查「某值是否在一組值裡」：`ext in {".jpg", ".png"}`。
   - 「空字串」要優先判斷，才能分到 `no_extension`。
 - **程式概念**：比較運算、`in`、集合 `{...}`、`if / elif / else`、空字串判斷 `ext == ""`。
-- **小活動**
-  1. 寫一段程式：給定 `ext = ".png"`，用 `if` 印出 `images`；再改成 `.csv` 印出 `data`；改成 `""` 印出 `no_extension`；改成 `.zip` 印出 `others`。
+- **小活動**（練習檔：`lesson2.py`，執行：`python lesson2.py`）
+  - 起手式：
+
+    ```python
+    ext = ".png"   # 改這一行來試不同副檔名
+
+    if ext == "":
+        print("no_extension")
+    elif ext in {".jpg", ".jpeg", ".png", ".gif"}:
+        print("images")
+    # 在這裡繼續加 elif ...
+    else:
+        print("others")
+    ```
+
+  1. 補完判斷：給定 `ext = ".png"` 印出 `images`；再改成 `.csv` 印出 `data`；改成 `""` 印出 `no_extension`；改成 `.zip` 印出 `others`。每改一次就存檔重跑 `python lesson2.py`。
   2. 討論：如果忘了 `.lower()`，`.JPG` 會被分到哪裡？（答：`others`，這就是 bug）
 
 ### 第 3 堂：迴圈（for）——走過資料夾第一層（35 分鐘）
@@ -108,9 +130,23 @@ ls "$TMP"
   - 用 `is_file()` 只留下檔案，子資料夾（例如 `subdir/`）跳過不處理。
   - 用 `sorted()` 讓順序固定，每次執行結果一樣。
 - **程式概念**：`for ... in ...`、`iterdir()`、`is_file()`、`continue`、`sorted()`。
-- **小活動**
+- **小活動**（練習檔：`lesson3.py`，執行：`python lesson3.py "$TMP"`）
+  - `sys.argv[1]` 就是命令列上 `python lesson3.py` 後面的**第一個參數**；上面的執行方式中，它就是 `$TMP` 的路徑（`sys.argv[0]` 是程式檔名本身）。
+  - 起手式：
+
+    ```python
+    import sys
+    from pathlib import Path
+
+    folder = Path(sys.argv[1])   # 命令列第一個參數 = 要掃描的資料夾
+
+    for item in sorted(folder.iterdir()):
+        # 在這裡用 is_file() 判斷：不是檔案就 continue
+        print(item.name)
+    ```
+
   1. 在臨時資料夾多建一個子資料夾：`mkdir "$TMP/subdir" && touch "$TMP/subdir/nested.txt"`。
-  2. 寫迴圈印出 `$TMP` 第一層的檔案名稱，確認 `nested.txt` **沒有**出現、`subdir` 也沒有被當成檔案印出。
+  2. 補完迴圈，印出 `$TMP` 第一層的檔案名稱，確認 `nested.txt` **沒有**出現、`subdir` 也沒有被當成檔案印出。
 
 ### 第 4 堂：函式（def）——把邏輯包起來（35 分鐘）
 
@@ -119,7 +155,26 @@ ls "$TMP"
   - 一個函式只做一件事，名字要說清楚它做什麼。
   - 拿第 2 堂的 `if` 改寫成 `category_for(path)`，給檔案回傳分類資料夾名稱。
 - **程式概念**：`def`、參數、`return`、docstring（`"""說明"""`）、呼叫函式。
-- **小活動**
+- **小活動**（練習檔：`lesson4.py`，執行：`python lesson4.py`）
+  - 起手式：
+
+    ```python
+    from pathlib import Path
+
+
+    def category_for(path):
+        """依副檔名回傳分類資料夾名稱。"""
+        ext = path.suffix.lower()
+        if ext == "":
+            return "no_extension"
+        # 把第 2 堂的 elif 搬進來，print 改成 return
+        return "others"
+
+
+    for name in ["photo.JPG", "notes.txt", "README"]:
+        print(name, "->", category_for(Path(name)))
+    ```
+
   1. 寫 `def category_for(path):`，用第 2 堂的判斷回傳分類名稱。
   2. 用迴圈對 `["photo.JPG", "notes.txt", "README"]` 逐一呼叫，印出「檔名 -> 分類」。
   3. 討論：為什麼把邏輯包成函式後比較好測試？（答：可以單獨給輸入、檢查輸出，不用真的搬檔案）
@@ -131,7 +186,37 @@ ls "$TMP"
   - 完整分類規則見「程式規格」一節的對照表。
   - 規劃「來源 -> 目的」：目的路徑 = 來源資料夾 / 分類資料夾 / 檔名。
 - **程式概念**：字典 `dict`、`for` 走訪字典、路徑相加 `source / "images" / name`。
-- **小活動**
+- **小活動**（練習檔：`lesson5.py`，執行：`python lesson5.py "$TMP"`；`sys.argv[1]` 同第 3 堂，是命令列第一個參數）
+  - 起手式：
+
+    ```python
+    import sys
+    from pathlib import Path
+
+    CATEGORIES = {
+        "images": {".jpg", ".jpeg", ".png", ".gif"},
+        # 在這裡補上 documents、data、code
+    }
+
+
+    def category_for(path):
+        """依對照表回傳分類資料夾名稱。"""
+        ext = path.suffix.lower()
+        if ext == "":
+            return "no_extension"
+        for category, extensions in CATEGORIES.items():
+            if ext in extensions:
+                return category
+        return "others"
+
+
+    folder = Path(sys.argv[1])
+    for item in sorted(folder.iterdir()):
+        if not item.is_file():
+            continue
+        print(item.name, "->", f"{category_for(item)}/{item.name}")
+    ```
+
   1. 把分類規則寫成字典 `{"images": {".jpg", ".jpeg", ".png", ".gif"}, ...}`，改寫 `category_for`。
   2. 對臨時資料夾每個檔案印出 `photo.JPG -> images/photo.JPG` 這樣的清單（只印、不搬）。
   3. 先預測再核對：`table.XLSX`、`archive.tar.gz`、`.gitignore` 各會分到哪？（答：`data/`、`others/`（只看最後的 `.gz`）、`no_extension/`）
@@ -282,11 +367,12 @@ ls "$TMP"
 - **預覽**（不加 `--apply`）：只印出「來源 -> 目的」清單與「加 --apply 才會實際移動」提示，**不建資料夾、不移動檔案**。
 - **`--apply`**：建立分類資料夾，真的把檔案搬過去。
 - 驗證方法：
-  1. 預覽前存下清單：`ls -R "$TMP" > before.txt`（存在 `$TMP` 外面）。
+  1. 預覽前存下清單：`ls -R "$TMP" > "$TMP-before.txt"`（存在 `$TMP` 資料夾外面，才不會被當成要整理的檔案）。
   2. 執行預覽：`python organize_downloads.py "$TMP"`。
-  3. 預覽後再存：`ls -R "$TMP" > after.txt`，`diff before.txt after.txt` 應該**沒有任何輸出**（代表沒改檔）。
+  3. 預覽後再存：`ls -R "$TMP" > "$TMP-after.txt"`，`diff "$TMP-before.txt" "$TMP-after.txt"` 應該**沒有任何輸出**（代表沒改檔）。
   4. 執行 `python organize_downloads.py "$TMP" --apply`，再 `ls -R "$TMP"`：出現 `images/` 等資料夾，檔案已移入。
   5. 數檔案總數：`find "$TMP" -type f | wc -l` 在 apply 前後相同（沒有遺失或覆寫）。
+  6. 清理：`rm -rf "$TMP"` 並一併 `rm -f "$TMP-before.txt" "$TMP-after.txt"`。
 - 安全原則：一定先預覽、確認清單正確才 `--apply`；只用臨時假資料。
 
 ### 練習三：同批次碰撞與「只掃第一層」
