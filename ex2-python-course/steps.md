@@ -14,6 +14,7 @@ ls
 ```
 
 **你應該看到**：清單裡有 `organize_downloads.py`、`test_organize_downloads.py`、`steps.md`、`curriculum.md`。
+（可能還有 `TASK.md`、`out`、`__pycache__` 等，不用理會。）
 
 ---
 
@@ -31,6 +32,9 @@ echo "$TMP"
 > 但 Windows 版 Python 看不懂，會回「錯誤：找不到資料夾」。
 > `cygpath -m` 把它轉成 `C:/...` 格式，Git Bash 和 Python 都看得懂。
 
+> ⚠️ **`TMP` 只存在這個終端機視窗裡。** 關掉終端機（或開新視窗）後 `TMP` 會變成空的，
+> 這時要**重做步驟 1、2**。後面每次執行程式前都會先檢查一次 `TMP` 是不是空的。
+
 ---
 
 ## 步驟 2：建立假檔案
@@ -47,6 +51,7 @@ find "$TMP" -type f | wc -l
 **你應該看到**：
 
 - 第一層有 `README  documents  notes.txt  photo.JPG  report.txt  report_1.txt  script.py  subdir  table.csv`
+  （排列方式可能不同，例如一行一個，名稱對得上就好）
 - `documents:` 底下有 `report.txt`
 - `subdir:` 底下有 `nested.txt`
 - 最後一行數字是 `9`（總共 9 個檔案）
@@ -56,11 +61,15 @@ find "$TMP" -type f | wc -l
 ## 步驟 3：先預覽（不會動任何檔案）
 
 ```bash
+[ -n "$TMP" ] || echo "TMP 是空的，請回步驟 1"
 ls -R "$TMP" > "$TMP-before.txt"      # 先存一份「執行前」清單（存在 $TMP 外面）
 PYTHONUTF8=1 python organize_downloads.py "$TMP"
 ```
 
-**你應該看到**：
+如果第一行印出 `TMP 是空的，請回步驟 1`，**不要往下做**，先回步驟 1、2 重建。
+（就算忘了檢查，程式也會印 `錯誤：沒有指定資料夾（$TMP 可能是空的，請回步驟 1 重新建立）` 並停下，不會整理目前的資料夾。）
+
+**你應該看到**（`TMP` 正常時第一行不會印任何東西）：
 
 ```text
 notes.txt -> documents/notes.txt
@@ -93,8 +102,11 @@ ls -R "$TMP" | diff "$TMP-before.txt" - && echo "預覽沒改檔"
 ## 步驟 5：加 `--apply` 實際移動
 
 ```bash
+[ -n "$TMP" ] || echo "TMP 是空的，請回步驟 1"
 PYTHONUTF8=1 python organize_downloads.py "$TMP" --apply
 ```
+
+第一行若印出 `TMP 是空的，請回步驟 1`，代表終端機重開過，回步驟 1 重來。
 
 **你應該看到**：
 
@@ -131,15 +143,18 @@ find "$TMP" -type f | wc -l
 ## 步驟 7（加碼）：試試錯誤情況
 
 ```bash
+[ -n "$TMP" ] || echo "TMP 是空的，請回步驟 1"
 PYTHONUTF8=1 python organize_downloads.py "$TMP/不存在"; echo "exit code = $?"
 mkdir "$TMP/empty"
 PYTHONUTF8=1 python organize_downloads.py "$TMP/empty"; echo "exit code = $?"
+PYTHONUTF8=1 python organize_downloads.py ""; echo "exit code = $?"
 ```
 
 **你應該看到**：
 
-- 第一個：`錯誤：找不到資料夾 ...不存在`，接著 `exit code = 2`
+- 第一個：`錯誤：找不到資料夾 C:/Users/.../Temp/tmp.xxx/不存在`（斜線方向跟你輸入的一樣），接著 `exit code = 2`
 - 第二個：`沒有要整理的檔案`，接著 `exit code = 0`
+- 第三個（模擬 `TMP` 是空的）：`錯誤：沒有指定資料夾（$TMP 可能是空的，請回步驟 1 重新建立）`，接著 `exit code = 2`，目前資料夾的檔案完全沒被動
 
 ---
 
@@ -149,10 +164,10 @@ PYTHONUTF8=1 python organize_downloads.py "$TMP/empty"; echo "exit code = $?"
 PYTHONUTF8=1 python -m unittest discover -s . -p 'test_*.py' -v
 ```
 
-**你應該看到**：8 行 `... ok`，最後是
+**你應該看到**：9 行 `... ok`，最後是
 
 ```text
-Ran 8 tests in 0.0xxs
+Ran 9 tests in 0.0xxs
 
 OK
 ```

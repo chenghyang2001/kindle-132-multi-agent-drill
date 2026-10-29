@@ -117,13 +117,22 @@ def build_parser():
 def main(argv=None):
     """解析參數、規劃、預覽或移動，回傳 exit code。"""
     args = build_parser().parse_args(argv)
-    source = Path(args.source)
 
+    # Path("") 會變成「目前資料夾」；$TMP 沒設定時就會誤整理課程資料夾，必須擋下
+    if args.source.strip() == "":
+        print(
+            "錯誤：沒有指定資料夾（$TMP 可能是空的，請回步驟 1 重新建立）",
+            file=sys.stderr,
+        )
+        return EXIT_BAD_SOURCE
+
+    source = Path(args.source)
+    # 錯誤訊息用斜線，跟預覽輸出一致，初學者才不會以為路徑被改掉
     if not source.exists():
-        print(f"錯誤：找不到資料夾 {source}", file=sys.stderr)
+        print(f"錯誤：找不到資料夾 {source.as_posix()}", file=sys.stderr)
         return EXIT_BAD_SOURCE
     if not source.is_dir():
-        print(f"錯誤：{source} 不是資料夾", file=sys.stderr)
+        print(f"錯誤：{source.as_posix()} 不是資料夾", file=sys.stderr)
         return EXIT_BAD_SOURCE
 
     plan = plan_moves(source)

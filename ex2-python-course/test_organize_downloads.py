@@ -5,6 +5,7 @@
 """
 import contextlib
 import io
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -131,6 +132,26 @@ class OrganizeDownloadsTest(unittest.TestCase):
         code, _, err = run_main([str(self.root / "file.txt")])
         self.assertEqual(code, 2)
         self.assertIn("不是資料夾", err)
+        # 錯誤訊息的路徑用斜線，跟預覽輸出一致
+        self.assertNotIn("\\", err)
+
+    # 9. 空字串或只有空白的來源 → exit 2，且目前資料夾不被動
+    def test_empty_source_argument(self):
+        make_files(self.root, ["notes.txt", "photo.JPG"])
+        before = snapshot(self.root)
+        old_cwd = os.getcwd()
+        # 切到臨時資料夾當「目前資料夾」，萬一被誤整理也只動到假資料
+        os.chdir(self.root)
+        try:
+            for blank in ["", "   "]:
+                for extra in [[], ["--apply"]]:
+                    code, out, err = run_main([blank] + extra)
+                    self.assertEqual(code, 2)
+                    self.assertIn("沒有指定資料夾", err)
+                    self.assertEqual(out, "")
+        finally:
+            os.chdir(old_cwd)
+        self.assertEqual(snapshot(self.root), before)
 
 
 if __name__ == "__main__":
