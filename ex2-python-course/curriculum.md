@@ -40,15 +40,17 @@
 
 ## 3. 安全原則（每一堂都適用）
 
-1. **絕對不要對真實的下載資料夾（`~/Downloads`）執行本課程式。** 所有示範、練習、測試都只用 `mktemp -d` 或 Python `tempfile` 建立的臨時資料夾。
+1. **絕對不要對真實的下載資料夾（`~/Downloads`）執行本課程式。** 所有示範、練習、測試都只用 `TMP=$(cygpath -m "$(mktemp -d)")` 或 Python `tempfile` 建立的臨時資料夾。
 2. **先預覽，再 `--apply`。** 預覽只印清單、不改任何檔案；看過清單沒問題才加 `--apply`。
 3. **不覆寫。** 目的地已有同名檔案時，程式一律改名（加 `_1`、`_2`…），不會蓋掉舊檔。
-4. 練習結束後刪掉臨時資料夾（`rm -rf "$TMP"`，**只刪你自己用 `mktemp -d` 建的那個**）。
+4. 練習結束後刪掉臨時資料夾（`rm -rf "$TMP"`，**只刪你自己用 `TMP=$(cygpath -m "$(mktemp -d)")` 建的那個**）。
 
 建立臨時練習資料夾的標準做法（每堂課都會用到）：
 
+> Windows + Git Bash 要用 `cygpath -m` 把 `mktemp -d` 回傳的 `/tmp/tmp.xxx` 轉成 Python 看得懂的路徑（例如 `C:/Users/.../Temp/tmp.xxx`），否則 Python 會回報找不到資料夾；macOS/Linux 直接 `TMP=$(mktemp -d)` 即可。
+
 ```bash
-TMP=$(mktemp -d)        # 建立一個空的臨時資料夾，路徑存進變數 TMP
+TMP=$(cygpath -m "$(mktemp -d)")   # 建立空的臨時資料夾，轉成 Python 看得懂的路徑後存進變數 TMP
 echo "$TMP"             # 看一下路徑，確認不是 ~/Downloads
 touch "$TMP/photo.JPG" "$TMP/notes.txt" "$TMP/table.csv" "$TMP/script.py" "$TMP/README"
 ls "$TMP"
@@ -200,7 +202,7 @@ ls "$TMP"
   - 最後一行提示：`這是預覽，加 --apply 才會實際移動。`
 - **加 `--apply`**：
   - 依規劃逐筆 `shutil.move`；移動前才用 `mkdir(parents=True, exist_ok=True)` 建立目的子資料夾。
-  - 每筆印一行（格式同上，可加「已移動：」前綴），最後印總數，例如 `完成：已移動 8 個檔案。`
+  - 每筆印一行（格式同上，可加「已移動：」前綴），最後印總數，例如 `完成：已移動 7 個檔案。`（以標準範例第一層 7 個檔案為例：photo.JPG、notes.txt、table.csv、script.py、README、report.txt、report_1.txt；實際數字依檔案數而定）
 - 來源資料夾沒有任何第一層檔案時：印 `沒有要整理的檔案`，正常結束（exit code 0）。
 
 ### 5.5 同名不覆寫與同批次碰撞
@@ -273,7 +275,7 @@ ls "$TMP"
 
 ### 練習二：比較預覽與 `--apply`
 
-**題目**：用 `mktemp -d` 建立臨時假資料（**不可用 `~/Downloads`**），先執行預覽、再執行 `--apply`。說明兩者差異，並寫出你如何**驗證**預覽真的沒有改到任何檔案。
+**題目**：用 `TMP=$(cygpath -m "$(mktemp -d)")` 建立臨時假資料（Windows + Git Bash 要用 cygpath -m 轉成 Python 看得懂的路徑；macOS/Linux 直接 `TMP=$(mktemp -d)` 即可；**不可用 `~/Downloads`**），先執行預覽、再執行 `--apply`。說明兩者差異，並寫出你如何**驗證**預覽真的沒有改到任何檔案。
 
 **預期解**：
 
