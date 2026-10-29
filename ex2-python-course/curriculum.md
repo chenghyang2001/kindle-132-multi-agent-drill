@@ -132,11 +132,17 @@ ls "$TMP"
 - **程式概念**：`for ... in ...`、`iterdir()`、`is_file()`、`continue`、`sorted()`。
 - **小活動**（練習檔：`lesson3.py`，執行：`python lesson3.py "$TMP"`）
   - `sys.argv[1]` 就是命令列上 `python lesson3.py` 後面的**第一個參數**；上面的執行方式中，它就是 `$TMP` 的路徑（`sys.argv[0]` 是程式檔名本身）。
+  - 如果你沒加防呆、執行時看到 `IndexError: list index out of range`，代表你忘了在指令後面加 `"$TMP"`（`sys.argv` 裡沒有第 1 個參數）。起手式已加上防呆，會改印用法提示並結束。
   - 起手式：
 
     ```python
     import sys
     from pathlib import Path
+
+    # 防呆：沒給參數或給了空字串（例如 TMP 不見了）就停下來
+    if len(sys.argv) < 2 or not sys.argv[1].strip():
+        print('用法：python lesson3.py "$TMP"（TMP 不可為空）')
+        sys.exit(2)
 
     folder = Path(sys.argv[1])   # 命令列第一個參數 = 要掃描的資料夾
 
@@ -186,7 +192,7 @@ ls "$TMP"
   - 完整分類規則見「程式規格」一節的對照表。
   - 規劃「來源 -> 目的」：目的路徑 = 來源資料夾 / 分類資料夾 / 檔名。
 - **程式概念**：字典 `dict`、`for` 走訪字典、路徑相加 `source / "images" / name`。
-- **小活動**（練習檔：`lesson5.py`，執行：`python lesson5.py "$TMP"`；`sys.argv[1]` 同第 3 堂，是命令列第一個參數）
+- **小活動**（練習檔：`lesson5.py`，執行：`python lesson5.py "$TMP"`；`sys.argv[1]` 同第 3 堂，是命令列第一個參數；看到 `IndexError` 代表忘了加 `"$TMP"`，起手式的防呆會改印用法提示）
   - 起手式：
 
     ```python
@@ -209,6 +215,11 @@ ls "$TMP"
                 return category
         return "others"
 
+
+    # 防呆：沒給參數或給了空字串（例如 TMP 不見了）就停下來
+    if len(sys.argv) < 2 or not sys.argv[1].strip():
+        print('用法：python lesson5.py "$TMP"（TMP 不可為空）')
+        sys.exit(2)
 
     folder = Path(sys.argv[1])
     for item in sorted(folder.iterdir()):
