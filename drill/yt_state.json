@@ -1,0 +1,35 @@
+{
+  "videos": {
+    "k132-digest": {
+      "video_id": "Hz5IcLZ8QC0",
+      "status": "uploaded",
+      "title": "K132 多 Agent 三實例演練｜精華版（約 3 分鐘）",
+      "at": "2026-10-30T07:59:48"
+    },
+    "k132-voice": {
+      "video_id": "TavwdgrFM-I",
+      "status": "uploaded",
+      "title": "K132 多 Agent 三實例演練｜語音版（約 5 分鐘）",
+      "at": "2026-10-30T08:00:10"
+    },
+    "k132-full": {
+      "video_id": "sj59ooLLbOM",
+      "status": "uploaded",
+      "title": "K132 多 Agent 三實例演練｜完整版（約 35 分鐘）",
+      "at": "2026-10-30T08:03:35"
+    }
+  },
+  "playlists": {
+    "K132 用三個實例學會多 Agent 應用｜實機演練": {
+      "playlist_id": "PLXkvXKQreK4A",
+      "title": "K132 用三個實例學會多 Agent 應用｜實機演練"
+    }
+  },
+  "playlist_items": {
+    "K132 用三個實例學會多 Agent 應用｜實機演練": [
+      "Hz5IcLZ8QC0",
+      "TavwdgrFM-I",
+      "sj59ooLLbOM"
+    ]
+  }
+}

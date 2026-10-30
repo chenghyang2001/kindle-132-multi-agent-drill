@@ -1,0 +1,1 @@
+程式 Agent 寫出整理程式和測試，並回報一個規格問題：在 Windows 上，mktemp 產生的路徑 Python 讀不到。主 Agent 退回教學設計修正教材。

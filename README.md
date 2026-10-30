@@ -13,3 +13,15 @@
 - 書附配件 `multi-agent-reader-resources-1.0.0.zip` 找不到下載點，依書中內容重建；`ex1-travel/plan-template.md` 的「七項結構」書中未列出，是演練時補的。
 - 快速 demo 模式：子 Agent 啟動時設 `DISABLE_WRITER_QA_HOOK=1`，未經 QA／審查。
 - 錄影、TTS、上傳紀錄在 `drill/`。
+
+## 成果（2026-10-30）
+
+| 版本 | 連結（YouTube 私人） |
+| --- | --- |
+| 精華版（約 3 分鐘） | https://youtu.be/Hz5IcLZ8QC0 |
+| 語音版（約 5 分鐘） | https://youtu.be/TavwdgrFM-I |
+| 完整版（約 35 分鐘） | https://youtu.be/sj59ooLLbOM |
+| 播放清單 | https://www.youtube.com/playlist?list=PLXkvXKQreK4A |
+
+- 各實例報告：`ex1-travel/out/REPORT.md`、`ex2-python-course/out/REPORT.md`、`ex3-search-bugfix/out/REPORT.md`
+- 錄影原檔在本機 `~/Videos/k132-drill/`（hp1，不進 git）；旁白稿在 `drill/tts/`

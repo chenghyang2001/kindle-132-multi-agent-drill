@@ -18,7 +18,8 @@ printf '%s\t%s\n' "$(date +%s)" "事件說明" >> <EX>/out/timeline.tsv
 
 ```bash
 cd ~/workspace/kindle-132-multi-agent-drill
-wpanes open -Session <S> -Titles "角色1,角色2,角色3" -Monitor 2 -Cwd "$(cygpath -w "$PWD/<EX>")"
+env -u TMUX -u TMUX_PANE wpanes open -Session <S> -Titles "角色1,角色2,角色3" -Monitor 2 -Cwd "$(cygpath -w "$PWD/<EX>")"
+# 一定要 env -u TMUX：你自己在 tmux 格子裡，不清掉會變成 tmux 套 tmux
 ```
 
 兩個子 Agent 時給兩個名稱（左右兩格）。
@@ -31,6 +32,8 @@ for p in 1 2 3; do wpanes send $p -Stdin -Session <S> < <EX>/out/_start.txt; don
 sleep 20
 wpanes capture 1 -Session <S> -Lines 8     # 要看到 bypass permissions on
 ```
+
+若畫面出現「Do you trust the files in this folder?」：游標預設在「No, exit」，要先 `wpanes keys N Up -Session <S>` 再 `wpanes keys N Enter -Session <S>`（直接 Enter 會退出 Claude）。
 
 再為每格改名：`printf '%s\n' '/rename <S>-角色1' > <EX>/out/_rn1.txt; wpanes send 1 -Stdin -Session <S> < <EX>/out/_rn1.txt`
 
