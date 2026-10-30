@@ -1,7 +1,7 @@
 [
   {
     "key": "k132-digest",
-    "file": "C:\\Users\\USER\\Videos\\k132-drill\\k132-drill-digest.mp4",
+    "file": "~\\Videos\\k132-drill\\k132-drill-digest.mp4",
     "position": 1,
     "playlist": "K132 用三個實例學會多 Agent 應用｜實機演練",
     "title": "K132 多 Agent 三實例演練｜精華版（約 3 分鐘）",
@@ -9,7 +9,7 @@
   },
   {
     "key": "k132-voice",
-    "file": "C:\\Users\\USER\\Videos\\k132-drill\\k132-drill-voice.mp4",
+    "file": "~\\Videos\\k132-drill\\k132-drill-voice.mp4",
     "position": 2,
     "playlist": "K132 用三個實例學會多 Agent 應用｜實機演練",
     "title": "K132 多 Agent 三實例演練｜語音版（約 5 分鐘）",
@@ -17,7 +17,7 @@
   },
   {
     "key": "k132-full",
-    "file": "C:\\Users\\USER\\Videos\\k132-drill\\k132-drill-full.mp4",
+    "file": "~\\Videos\\k132-drill\\k132-drill-full.mp4",
     "position": 3,
     "playlist": "K132 用三個實例學會多 Agent 應用｜實機演練",
     "title": "K132 多 Agent 三實例演練｜完整版（約 35 分鐘）",

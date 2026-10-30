@@ -3,7 +3,7 @@
 - 日期：2026-10-30
 - 環境：Windows 11 + Git Bash，`python --version` → `Python 3.14.7`
 - 做法：先讀 `curriculum.md`，再照 `steps.md` 步驟 0～9 操作。
-- 安全：全程只用 `TMP=$(cygpath -m "$(mktemp -d)")` 建立的臨時資料夾，路徑都是 `C:/Users/USER/AppData/Local/Temp/tmp.xxxx`，**沒有碰 `~/Downloads` 或任何真實資料夾**。每次用完都 `rm -rf` 刪掉。
+- 安全：全程只用 `TMP=$(cygpath -m "$(mktemp -d)")` 建立的臨時資料夾，路徑都是 `~/AppData/Local/Temp/tmp.xxxx`，**沒有碰 `~/Downloads` 或任何真實資料夾**。每次用完都 `rm -rf` 刪掉。
 - 以下的命令與輸出都是實際執行後貼上的（`[rc=N]` 是該行命令的 exit code）。
 
 ---
@@ -46,7 +46,7 @@ Python 3.14.7
 ```text
 $ TMP=$(cygpath -m "$(mktemp -d)")
 $ echo "$TMP"
-C:/Users/USER/AppData/Local/Temp/tmp.3BufdHtHDD
+~/AppData/Local/Temp/tmp.3BufdHtHDD
 ```
 
 符合預期：格式是 `C:/Users/.../Temp/tmp.xxx`，路徑裡沒有 `Downloads`。
@@ -59,7 +59,7 @@ $ touch "$TMP/photo.JPG" "$TMP/notes.txt" "$TMP/table.csv" "$TMP/script.py" "$TM
 $ touch "$TMP/report.txt" "$TMP/report_1.txt" "$TMP/subdir/nested.txt"
 $ touch "$TMP/documents/report.txt"
 $ ls -R "$TMP"
-C:/Users/USER/AppData/Local/Temp/tmp.3BufdHtHDD:
+~/AppData/Local/Temp/tmp.3BufdHtHDD:
 README
 documents
 notes.txt
@@ -70,10 +70,10 @@ script.py
 subdir
 table.csv
 
-C:/Users/USER/AppData/Local/Temp/tmp.3BufdHtHDD/documents:
+~/AppData/Local/Temp/tmp.3BufdHtHDD/documents:
 report.txt
 
-C:/Users/USER/AppData/Local/Temp/tmp.3BufdHtHDD/subdir:
+~/AppData/Local/Temp/tmp.3BufdHtHDD/subdir:
 nested.txt
 
 $ find "$TMP" -type f | wc -l
@@ -134,7 +134,7 @@ $ PYTHONUTF8=1 python organize_downloads.py "$TMP" --apply
 
 ```text
 $ ls -R "$TMP"
-C:/Users/USER/AppData/Local/Temp/tmp.3BufdHtHDD:
+~/AppData/Local/Temp/tmp.3BufdHtHDD:
 code
 data
 documents
@@ -167,15 +167,15 @@ $ find "$TMP" -type f | wc -l
 9
 
 $ find "$TMP" -type f | sort
-C:/Users/USER/AppData/Local/Temp/tmp.3BufdHtHDD/code/script.py
-C:/Users/USER/AppData/Local/Temp/tmp.3BufdHtHDD/data/table.csv
-C:/Users/USER/AppData/Local/Temp/tmp.3BufdHtHDD/documents/notes.txt
-C:/Users/USER/AppData/Local/Temp/tmp.3BufdHtHDD/documents/report.txt
-C:/Users/USER/AppData/Local/Temp/tmp.3BufdHtHDD/documents/report_1.txt
-C:/Users/USER/AppData/Local/Temp/tmp.3BufdHtHDD/documents/report_1_1.txt
-C:/Users/USER/AppData/Local/Temp/tmp.3BufdHtHDD/images/photo.JPG
-C:/Users/USER/AppData/Local/Temp/tmp.3BufdHtHDD/no_extension/README
-C:/Users/USER/AppData/Local/Temp/tmp.3BufdHtHDD/subdir/nested.txt
+~/AppData/Local/Temp/tmp.3BufdHtHDD/code/script.py
+~/AppData/Local/Temp/tmp.3BufdHtHDD/data/table.csv
+~/AppData/Local/Temp/tmp.3BufdHtHDD/documents/notes.txt
+~/AppData/Local/Temp/tmp.3BufdHtHDD/documents/report.txt
+~/AppData/Local/Temp/tmp.3BufdHtHDD/documents/report_1.txt
+~/AppData/Local/Temp/tmp.3BufdHtHDD/documents/report_1_1.txt
+~/AppData/Local/Temp/tmp.3BufdHtHDD/images/photo.JPG
+~/AppData/Local/Temp/tmp.3BufdHtHDD/no_extension/README
+~/AppData/Local/Temp/tmp.3BufdHtHDD/subdir/nested.txt
 ```
 
 （`ls -R` 的子資料夾標題為了好讀，縮寫成 `...`；完整路徑都在上面 `find` 的輸出裡。）
@@ -192,7 +192,7 @@ C:/Users/USER/AppData/Local/Temp/tmp.3BufdHtHDD/subdir/nested.txt
 
 ```text
 $ PYTHONUTF8=1 python organize_downloads.py "$TMP/不存在"; echo "exit code = $?"
-錯誤：找不到資料夾 C:\Users\USER\AppData\Local\Temp\tmp.3BufdHtHDD\不存在
+錯誤：找不到資料夾 ~\AppData\Local\Temp\tmp.3BufdHtHDD\不存在
 exit code = 2
 
 $ mkdir "$TMP/empty"
@@ -205,7 +205,7 @@ exit code = 0
 
 ```text
 $ PYTHONUTF8=1 python organize_downloads.py "$TMP/images/photo.JPG"; echo "exit code = $?"
-錯誤：C:\Users\USER\AppData\Local\Temp\tmp.3BufdHtHDD\images\photo.JPG 不是資料夾
+錯誤：~\AppData\Local\Temp\tmp.3BufdHtHDD\images\photo.JPG 不是資料夾
 exit code = 2
 
 $ PYTHONUTF8=1 python organize_downloads.py "$TMP"; echo "exit code = $?"   # 已整理過再跑一次
@@ -250,10 +250,10 @@ OK
 
 ```text
 $ echo "$TMP"
-C:/Users/USER/AppData/Local/Temp/tmp.3BufdHtHDD
+~/AppData/Local/Temp/tmp.3BufdHtHDD
 $ rm -rf "$TMP" "$TMP-before.txt"
 $ ls "$TMP" 2>&1
-ls: cannot access 'C:/Users/USER/AppData/Local/Temp/tmp.3BufdHtHDD': No such file or directory
+ls: cannot access '~/AppData/Local/Temp/tmp.3BufdHtHDD': No such file or directory
 ```
 
 符合預期。
@@ -428,7 +428,7 @@ $ find "$TMP" -type f | wc -l
 情境：初學者關掉 Git Bash 再開一個新的，接著直接從步驟 3 或步驟 5 往下做。新視窗沒有 `TMP` 這個變數，`"$TMP"` 就變成空字串。我在另一個臨時資料夾裡放了 3 個假的教材檔模擬這種情況，**只跑預覽**：
 
 ```text
-$ cd C:/Users/USER/AppData/Local/Temp/tmp.LUgoLszw4a   # 模擬：使用者人在某資料夾，且新開終端機 TMP 未設定
+$ cd ~/AppData/Local/Temp/tmp.LUgoLszw4a   # 模擬：使用者人在某資料夾，且新開終端機 TMP 未設定
 $ echo "[$TMP]"
 []
 $ PYTHONUTF8=1 python organize_downloads.py "$TMP"   # 只跑預覽
@@ -465,7 +465,7 @@ exit=0
 （`$COURSE` 是課程資料夾，用 `cygpath -m` 轉過的路徑。）
 
 ```text
-$ cd $W   # W=C:/Users/USER/AppData/Local/Temp/tmp.Js87znY9QQ
+$ cd $W   # W=~/AppData/Local/Temp/tmp.Js87znY9QQ
 $ touch curriculum.md organize_downloads.py steps.md
 $ TMP=""
 $ ls -R . > "$W-before.txt"; find . -type f | wc -l
@@ -511,7 +511,7 @@ steps.md
 ```text
 $ TMP=$(cygpath -m "$(mktemp -d)")
 $ echo "$TMP"
-C:/Users/USER/AppData/Local/Temp/tmp.sJpQY3ELWh
+~/AppData/Local/Temp/tmp.sJpQY3ELWh
 $ mkdir -p "$TMP/documents" "$TMP/subdir"
 $ touch "$TMP/photo.JPG" "$TMP/notes.txt" "$TMP/table.csv" "$TMP/script.py" "$TMP/README"
 $ touch "$TMP/report.txt" "$TMP/report_1.txt" "$TMP/subdir/nested.txt"
@@ -595,7 +595,7 @@ $ find "$TMP" -type f | wc -l
 
 # 步驟 7
 $ PYTHONUTF8=1 python organize_downloads.py "$TMP/不存在"; echo "exit code = $?"
-錯誤：找不到資料夾 C:/Users/USER/AppData/Local/Temp/tmp.sJpQY3ELWh/不存在
+錯誤：找不到資料夾 ~/AppData/Local/Temp/tmp.sJpQY3ELWh/不存在
 exit code = 2
 $ mkdir "$TMP/empty"
 $ PYTHONUTF8=1 python organize_downloads.py "$TMP/empty"; echo "exit code = $?"
@@ -605,7 +605,7 @@ $ PYTHONUTF8=1 python organize_downloads.py ""; echo "exit code = $?"
 錯誤：沒有指定資料夾（$TMP 可能是空的，請回步驟 1 重新建立）
 exit code = 2
 $ PYTHONUTF8=1 python organize_downloads.py "$TMP/images/photo.JPG"; echo "exit code = $?"   # 額外
-錯誤：C:/Users/USER/AppData/Local/Temp/tmp.sJpQY3ELWh/images/photo.JPG 不是資料夾
+錯誤：~/AppData/Local/Temp/tmp.sJpQY3ELWh/images/photo.JPG 不是資料夾
 exit code = 2
 
 # 步驟 8
@@ -632,7 +632,7 @@ OK
 # 步驟 9
 $ rm -rf "$TMP" "$TMP-before.txt"
 $ ls "$TMP" 2>&1
-ls: cannot access 'C:/Users/USER/AppData/Local/Temp/tmp.sJpQY3ELWh': No such file or directory
+ls: cannot access '~/AppData/Local/Temp/tmp.sJpQY3ELWh': No such file or directory
 
 # 課程資料夾檢查（重跑前後比對 git status --porcelain 與 ls -A）
 課程資料夾前後一致（git status + ls -A 相同）

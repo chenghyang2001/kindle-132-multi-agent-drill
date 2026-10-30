@@ -1,7 +1,7 @@
 [unittest] Ran 9 tests in 0.077s
 [unittest] 
 [unittest] OK
-TMP=C:/Users/USER/AppData/Local/Temp/tmp.K1GalnfUbG/dl
+TMP=~/AppData/Local/Temp/tmp.K1GalnfUbG/dl
 前：總數 9
 $ python organize_downloads.py "$TMP"
 notes.txt -> documents/notes.txt
