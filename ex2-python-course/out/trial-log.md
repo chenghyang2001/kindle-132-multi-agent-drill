@@ -393,3 +393,287 @@ $ (cd "$demo" && find . -type f | sort)
 - prompt 指定的必查項目（預覽不改檔、`nested.txt` 留在原地、檔案數不變、不覆寫、出現 `report_1_1.txt`）全部通過。
 - 9 項單元測試全部通過。
 - 主要障礙：`curriculum.md` 範例指令用沒包 `cygpath` 的 `mktemp -d`，在本機會失敗（詳見 `obstacles.md` O-1）。
+
+---
+
+## 重驗（第 2 輪）
+
+> 依 `out/prompt-試學-recheck.md` 重驗。環境同第 1 輪（`Python 3.14.3`、`PYTHONUTF8=1`、`MSYS_NO_PATHCONV=1`）。
+> 受測檔案：工作區的 `curriculum.md`（15:06 修改）、`steps.md`（15:08 修改，commit `491f264`）；`organize_downloads.py`、`test_organize_downloads.py` 與 HEAD 無差異（`git diff --stat` 空白），確認 `.py` 沒改。
+> 全程只用 `cygpath -m "$(mktemp -d)"` 臨時資料夾，跑完都已刪除；沒碰 `~/Downloads`，沒改程式與教材。輸出中的帳號名稱遮成 `<帳號>`。
+
+### R-1：`curriculum.md` 第 3 堂小活動（原樣）
+
+課綱指令原樣執行；「寫迴圈印出 `$demo` 裡每個檔名」用初學者寫法，以 `python -c` 實作：
+
+```text
+$ demo=$(cygpath -m "$(mktemp -d)")
+$ touch "$demo/photo.JPG" "$demo/notes.txt" "$demo/README"
+$ mkdir "$demo/subdir" && touch "$demo/subdir/nested.txt"
+$ python -c "
+import sys
+from pathlib import Path
+for item in Path(sys.argv[1]).iterdir():
+    if item.is_file():
+        print(item.name)
+" "$demo"
+notes.txt
+photo.JPG
+README
+$ python organize_downloads.py "$demo"; echo "exit=$?"
+README -> no_extension/README
+notes.txt -> documents/notes.txt
+photo.JPG -> images/photo.JPG
+共 3 個檔案（預覽模式，沒有移動任何檔案）
+加 --apply 才會實際移動
+exit=0
+```
+
+✅ 不再出現「來源資料夾不存在」；`nested.txt` 沒有出現。
+
+### R-2：`curriculum.md` 第 6 堂小活動（原樣）
+
+```text
+$ demo=$(cygpath -m "$(mktemp -d)")
+$ mkdir "$demo/documents" && touch "$demo/documents/report.txt"
+$ touch "$demo/report.txt" "$demo/report_1.txt" "$demo/photo.JPG"
+$ python organize_downloads.py "$demo"; echo "exit=$?"
+photo.JPG -> images/photo.JPG
+report.txt -> documents/report_1.txt
+report_1.txt -> documents/report_1_1.txt
+共 3 個檔案（預覽模式，沒有移動任何檔案）
+加 --apply 才會實際移動
+exit=0
+$ ls -R "$demo"
+C:/Users/<帳號>/AppData/Local/Temp/tmp.oQzd2Tq316:
+documents
+photo.JPG
+report.txt
+report_1.txt
+
+C:/Users/<帳號>/AppData/Local/Temp/tmp.oQzd2Tq316/documents:
+report.txt
+$ python organize_downloads.py "$demo" --apply; echo "exit=$?"
+photo.JPG -> images/photo.JPG
+report.txt -> documents/report_1.txt
+report_1.txt -> documents/report_1_1.txt
+已移動 3 個檔案
+exit=0
+$ ls -R "$demo"
+C:/Users/<帳號>/AppData/Local/Temp/tmp.oQzd2Tq316:
+documents
+images
+
+C:/Users/<帳號>/AppData/Local/Temp/tmp.oQzd2Tq316/documents:
+report.txt
+report_1.txt
+report_1_1.txt
+
+C:/Users/<帳號>/AppData/Local/Temp/tmp.oQzd2Tq316/images:
+photo.JPG
+```
+
+✅ 能正常執行；預覽後檔案沒變；碰撞得到 `report_1.txt`、`report_1_1.txt`。
+
+### R-3：`curriculum.md` 練習 2 預期解（原樣，在專案資料夾執行）
+
+```text
+$ ls before.txt after_preview.txt
+ls: cannot access 'before.txt': No such file or directory
+ls: cannot access 'after_preview.txt': No such file or directory
+$ demo=$(cygpath -m "$(mktemp -d)")
+$ touch "$demo/photo.JPG" "$demo/notes.txt"
+$ ls -R "$demo" > before.txt
+$ python organize_downloads.py "$demo"
+notes.txt -> documents/notes.txt
+photo.JPG -> images/photo.JPG
+共 2 個檔案（預覽模式，沒有移動任何檔案）
+加 --apply 才會實際移動
+$ ls -R "$demo" > after_preview.txt
+$ diff before.txt after_preview.txt && echo "預覽沒有改檔"
+預覽沒有改檔
+$ python organize_downloads.py "$demo" --apply
+notes.txt -> documents/notes.txt
+photo.JPG -> images/photo.JPG
+已移動 2 個檔案
+$ ls -R "$demo"
+C:/Users/<帳號>/AppData/Local/Temp/tmp.AwgtnzotZH:
+documents
+images
+
+C:/Users/<帳號>/AppData/Local/Temp/tmp.AwgtnzotZH/documents:
+notes.txt
+
+C:/Users/<帳號>/AppData/Local/Temp/tmp.AwgtnzotZH/images:
+photo.JPG
+$ git status --short before.txt after_preview.txt
+?? after_preview.txt
+?? before.txt
+$ rm -rf "$demo" before.txt after_preview.txt
+```
+
+✅ 不再出現「來源資料夾不存在」，結果符合預期解。
+⚠️ 但 `before.txt`、`after_preview.txt` 仍寫在專案資料夾，變成 git 未追蹤檔；練習 2 也沒有清理的指令（已手動刪除）。→ O-3 在課綱這部分未解決。
+
+### R-4：逐項檢查 O-2～O-6 的文字修正
+
+| 編號 | 檢查位置 | 目前文字（摘錄） |
+| --- | --- | --- |
+| O-2 | `steps.md` 步驟 1 💡 | 「Windows 版 Python 看不懂這種路徑……所以**一律**用 `cygpath -m`」 |
+| O-3 | `steps.md` 步驟 1、3、4、8 | 新增 `cmp=$(cygpath -m "$(mktemp -d)")`，比對檔寫到 `"$cmp/before.txt"`，步驟 8 `rm -rf "$demo" "$cmp"`，並附 💡 說明原因 |
+| O-3 | `curriculum.md` 練習 2 | 仍是 `ls -R "$demo" > before.txt`、`diff before.txt after_preview.txt`（寫在目前目錄） |
+| O-4 | `curriculum.md` 第 2 節 | 「開始前先執行 `export PYTHONUTF8=1`，避免 Windows（系統編碼 cp950）上中文訊息變亂碼。」 |
+| O-5 | `curriculum.md` 第 4 堂 | 「`python -m unittest discover -s . -p 'test_*.py' -v`（與 `steps.md` 相同；簡寫 `python -m unittest -v` 效果相同，`discover` 是完整寫法）」 |
+| O-6 | `steps.md` 步驟 2、6 | 「（排列方式可能不同，例如一行一個檔名；檔名一樣就對了。）」 |
+
+### R-5：重跑 `steps.md` 完整流程（步驟 1～8 原樣）
+
+```text
+$ demo=$(cygpath -m "$(mktemp -d)")
+$ cmp=$(cygpath -m "$(mktemp -d)")
+$ echo "$demo"; echo "$cmp"
+C:/Users/<帳號>/AppData/Local/Temp/tmp.LTrLnqCzV5
+C:/Users/<帳號>/AppData/Local/Temp/tmp.Ma9ElrGGfz
+$ touch "$demo/photo.JPG" "$demo/notes.txt" "$demo/table.csv" "$demo/script.py" \
+        "$demo/README" "$demo/report.txt" "$demo/report_1.txt"
+$ mkdir "$demo/subdir" && touch "$demo/subdir/nested.txt"
+$ ls -R "$demo"
+C:/Users/<帳號>/AppData/Local/Temp/tmp.LTrLnqCzV5:
+README
+notes.txt
+photo.JPG
+report.txt
+report_1.txt
+script.py
+subdir
+table.csv
+
+C:/Users/<帳號>/AppData/Local/Temp/tmp.LTrLnqCzV5/subdir:
+nested.txt
+$ ls -R "$demo" > "$cmp/before.txt"
+$ python organize_downloads.py "$demo"
+README -> no_extension/README
+notes.txt -> documents/notes.txt
+photo.JPG -> images/photo.JPG
+report.txt -> documents/report.txt
+report_1.txt -> documents/report_1.txt
+script.py -> code/script.py
+table.csv -> data/table.csv
+共 7 個檔案（預覽模式，沒有移動任何檔案）
+加 --apply 才會實際移動
+$ ls -R "$demo" > "$cmp/after_preview.txt"
+$ diff "$cmp/before.txt" "$cmp/after_preview.txt" && echo "預覽沒有改檔"
+預覽沒有改檔
+$ python organize_downloads.py "$demo" --apply
+README -> no_extension/README
+notes.txt -> documents/notes.txt
+photo.JPG -> images/photo.JPG
+report.txt -> documents/report.txt
+report_1.txt -> documents/report_1.txt
+script.py -> code/script.py
+table.csv -> data/table.csv
+已移動 7 個檔案
+$ (cd "$demo" && ls -R)
+.:
+code
+data
+documents
+images
+no_extension
+subdir
+
+./code:
+script.py
+
+./data:
+table.csv
+
+./documents:
+notes.txt
+report.txt
+report_1.txt
+
+./images:
+photo.JPG
+
+./no_extension:
+README
+
+./subdir:
+nested.txt
+$ find "$demo" -type f | wc -l
+8
+$ python organize_downloads.py "$demo"
+沒有要整理的檔案
+$ touch "$demo/report.txt" "$demo/report_1.txt"
+$ python organize_downloads.py "$demo"
+report.txt -> documents/report_2.txt
+report_1.txt -> documents/report_1_1.txt
+共 2 個檔案（預覽模式，沒有移動任何檔案）
+加 --apply 才會實際移動
+$ rm -rf "$demo" "$cmp"
+$ ls "$demo" "$cmp"
+ls: cannot access 'C:/Users/<帳號>/AppData/Local/Temp/tmp.LTrLnqCzV5': No such file or directory
+ls: cannot access 'C:/Users/<帳號>/AppData/Local/Temp/tmp.Ma9ElrGGfz': No such file or directory
+```
+
+每一步都和 `steps.md`「你應該看到」相符 ✅（步驟 8 的兩行錯誤訊息也符合新版說明）；檔案總數 8 ＝ 8 ✅
+
+### R-6：加驗：目的地預先放 `documents/report.txt`（prompt 指定的完整假資料）
+
+假資料：`photo.JPG`、`notes.txt`、`table.csv`、`script.py`、`README`、`report.txt`（內容 `SRC-report`）、`report_1.txt`（內容 `SRC-report_1`）、`subdir/nested.txt`，以及預先存在的 `documents/report.txt`（內容 `ORIGINAL`）。
+
+```text
+$ find "$demo" -type f | sort > "$cmp/before.txt"; wc -l < "$cmp/before.txt"
+9
+$ python organize_downloads.py "$demo" > /dev/null
+$ find "$demo" -type f | sort > "$cmp/after_preview.txt"
+$ diff "$cmp/before.txt" "$cmp/after_preview.txt" && echo "預覽沒有改檔"
+預覽沒有改檔
+$ python organize_downloads.py "$demo" --apply
+README -> no_extension/README
+notes.txt -> documents/notes.txt
+photo.JPG -> images/photo.JPG
+report.txt -> documents/report_1.txt
+report_1.txt -> documents/report_1_1.txt
+script.py -> code/script.py
+table.csv -> data/table.csv
+已移動 7 個檔案
+$ (cd "$demo" && find . -type f | sort)
+./code/script.py
+./data/table.csv
+./documents/notes.txt
+./documents/report.txt
+./documents/report_1.txt
+./documents/report_1_1.txt
+./images/photo.JPG
+./no_extension/README
+./subdir/nested.txt
+$ find "$demo" -type f | wc -l
+9
+$ cat "$demo/documents/report.txt" "$demo/documents/report_1.txt" "$demo/documents/report_1_1.txt"
+ORIGINAL
+SRC-report
+SRC-report_1
+```
+
+✅ 預覽不改檔、`subdir/nested.txt` 不動、9 ＝ 9 沒有遺失、原檔沒被覆寫、出現 `report_1_1.txt`。
+
+### R-7：單元測試
+
+```text
+$ python -m unittest discover -s . -p 'test_*.py' -v 2>&1 | tail -5
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.030s
+
+OK
+```
+
+✅ 9 項全數通過。
+
+### 第 2 輪結論
+
+- O-1（高）已解決：課綱第 3、6 堂與練習 2 原樣操作都能正常執行。
+- O-2、O-4、O-5、O-6 已解決；O-3 只解決 `steps.md` 那部分，`curriculum.md` 練習 2 仍把比對檔寫進專案資料夾（列為新障礙 O-7）。
+- `steps.md` 全流程與單元測試全部通過。

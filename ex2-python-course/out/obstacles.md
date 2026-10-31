@@ -21,3 +21,24 @@
 - `steps.md` 步驟 0～8 的「你應該看到」全部和實際輸出一致（O-6 的排版差異除外）。
 - 單元測試 9 項全數通過，與 `steps.md` 步驟 7 預期相符。
 - 安全原則：教材與測試都沒有出現對 `~/Downloads` 執行的指令。
+
+## 重驗結果
+
+> 第 2 輪重驗（`out/prompt-試學-recheck.md`），證據詳見 `out/trial-log.md`〈重驗（第 2 輪）〉R-1～R-7。
+
+| 編號 | 結果 | 證據 |
+| --- | --- | --- |
+| O-1（高） | 已解決 | 課綱第 3、6 堂與練習 2 都改成 `demo=$(cygpath -m "$(mktemp -d)")`，第 3 堂附 💡 說明。原樣執行三處都是 exit 0、正常輸出，沒有出現「來源資料夾不存在」（R-1、R-2、R-3）。 |
+| O-2（低） | 已解決 | `steps.md` 步驟 1 💡 改為「Windows 版 Python 看不懂這種路徑……所以**一律**用 `cygpath -m`」（R-4）。 |
+| O-3（低） | 部分解決（`steps.md` 已解決／`curriculum.md` 未解決） | `steps.md` 新增 `cmp` 臨時資料夾放比對檔，步驟 8 一併刪除，實跑正常（R-5）。`curriculum.md` 練習 2 仍是 `ls -R "$demo" > before.txt`，原樣執行後 `git status` 顯示 `?? before.txt`、`?? after_preview.txt`，練習也沒有清理指令（R-3）。→ 殘留部分列為 O-7。 |
+| O-4（低） | 已解決 | `curriculum.md` 第 2 節先備知識新增「開始前先執行 `export PYTHONUTF8=1`……」（R-4）。 |
+| O-5（低） | 已解決 | `curriculum.md` 第 4 堂改為 `python -m unittest discover -s . -p 'test_*.py' -v`，並註明與簡寫等效（R-4）；實跑 9 tests OK（R-7）。 |
+| O-6（低） | 已解決 | `steps.md` 步驟 2、6 都加了「（排列方式可能不同，例如一行一個檔名；檔名一樣就對了。）」（R-4）。 |
+
+### 新發現的障礙
+
+| 編號 | 位置（哪份文件哪一步） | 障礙描述 | 嚴重度（高/中/低） | 建議修正 | 該退回給（教學設計/程式） |
+| --- | --- | --- | --- | --- | --- |
+| O-7 | `curriculum.md` 練習 2 預期解（O-3 的殘留） | 比對檔 `before.txt`、`after_preview.txt` 仍寫在目前目錄（專案資料夾），會留下 git 未追蹤檔，練習也沒有清理指令；和 `steps.md` 新版的 `cmp` 寫法不一致，初學者兩份文件對照時會困惑。 | 低 | 比照 `steps.md`：加 `cmp=$(cygpath -m "$(mktemp -d)")`，改成 `"$cmp/before.txt"`、`"$cmp/after_preview.txt"`，最後加 `rm -rf "$demo" "$cmp"`。 | 教學設計 |
+
+除 O-7 外沒有新障礙。重新檢查過的地方：課綱第 3、6 堂、練習 2 的原樣操作；`steps.md` 步驟 0～8（含 6-加碼）；prompt 指定的完整假資料（含預先存在的 `documents/report.txt`）；單元測試；兩份文件都沒有對 `~/Downloads` 的指令。
