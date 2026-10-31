@@ -21,16 +21,23 @@ export PYTHONUTF8=1         # 讓中文訊息不會變亂碼
 
 ## 步驟 1：建立臨時資料夾
 
+建兩個臨時資料夾：`demo` 放要整理的假檔案，`cmp` 放等一下比對用的清單檔。
+
 ```bash
 demo=$(cygpath -m "$(mktemp -d)")
+cmp=$(cygpath -m "$(mktemp -d)")
 echo "$demo"
+echo "$cmp"
 ```
 
-**你應該看到**：一個類似 `C:/Users/你的帳號/AppData/Local/Temp/tmp.AbC123xyz` 的路徑。
+**你應該看到**：兩個類似 `C:/Users/你的帳號/AppData/Local/Temp/tmp.AbC123xyz` 的路徑（結尾不同）。
 
 > 💡 為什麼要包一層 `cygpath -m`？`mktemp -d` 給的是 Git Bash 的 `/tmp/...` 路徑，
-> Windows 版 Python 有時看不懂（電腦若設了 `MSYS_NO_PATHCONV=1` 就一定看不懂，
-> 會出現「來源資料夾不存在」）。`cygpath -m` 把它轉成 `C:/...` 格式，Git Bash 和 Python 都看得懂。
+> Windows 版 Python 看不懂這種路徑，會出現「來源資料夾不存在」。所以**一律**用 `cygpath -m`
+> 把它轉成 `C:/...` 格式，Git Bash 和 Python 都看得懂。
+>
+> 💡 為什麼比對檔要放另一個資料夾 `cmp`？比對檔如果放在 `$demo` 裡，會被當成第一層的
+> `.txt` 檔一起整理；放在專案資料夾又會留下多餘檔案。放在 `$demo` 之外的臨時資料夾最乾淨。
 
 ---
 
@@ -53,6 +60,8 @@ C:/Users/.../tmp.AbC123xyz/subdir:
 nested.txt
 ```
 
+（排列方式可能不同，例如一行一個檔名；檔名一樣就對了。）
+
 ---
 
 ## 步驟 3：先預覽（不加 `--apply`）
@@ -60,7 +69,7 @@ nested.txt
 先存一份「執行前」的檔案清單，等一下用來比對：
 
 ```bash
-ls -R "$demo" > before.txt
+ls -R "$demo" > "$cmp/before.txt"
 python organize_downloads.py "$demo"
 ```
 
@@ -89,8 +98,8 @@ table.csv -> data/table.csv
 ## 步驟 4：確認預覽沒有改任何檔案
 
 ```bash
-ls -R "$demo" > after_preview.txt
-diff before.txt after_preview.txt && echo "預覽沒有改檔"
+ls -R "$demo" > "$cmp/after_preview.txt"
+diff "$cmp/before.txt" "$cmp/after_preview.txt" && echo "預覽沒有改檔"
 ```
 
 **你應該看到**：
@@ -147,6 +156,8 @@ README
 ./subdir:
 nested.txt
 ```
+
+（排列方式可能不同，例如一行一個檔名；檔名一樣就對了。）
 
 - 根目錄不再有那 7 個檔案，都進了分類資料夾。
 - `subdir/nested.txt` 原封不動。
@@ -205,11 +216,11 @@ OK
 ## 步驟 8：刪掉臨時資料夾與比對檔
 
 ```bash
-rm -rf "$demo" before.txt after_preview.txt
-ls "$demo"
+rm -rf "$demo" "$cmp"
+ls "$demo" "$cmp"
 ```
 
-**你應該看到**：`ls: cannot access '...': No such file or directory`，代表已刪乾淨。
+**你應該看到**：兩行 `ls: cannot access '...': No such file or directory`（`demo` 和 `cmp` 各一行），代表已刪乾淨。
 
 ---
 
