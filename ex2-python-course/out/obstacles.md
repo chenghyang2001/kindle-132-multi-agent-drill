@@ -1,46 +1,23 @@
-# 理解障礙報告（實例二・試學 Agent）
+# 理解障礙報告（試學 Agent，接力第 ③ 棒）
 
-> 試學身分：剛學 Python 的初學者，照 `curriculum.md` → `steps.md` 實際操作（日誌見 `out/trial-log.md`）。
-> 主流程（steps.md 步驟 0～9、8 項測試、三題練習）**全部符合預期**；以下是操作中卡住、可能誤解或有安全風險的地方。
-
-| 編號 | 位置（哪份文件哪一步） | 障礙描述 | 嚴重度（高/中/低） | 建議修正 | 該退回給（教學設計/程式） |
-| --- | --- | --- | --- | --- | --- |
-| O-1 | `organize_downloads.py` `main()`；`steps.md` 步驟 3、5（`"$TMP"`） | 新開 Git Bash 後 `$TMP` 是空的，`python organize_downloads.py ""` 會把 `Path("")` 當成 `.`，也就是整理**目前所在的資料夾**。我在臨時資料夾只用預覽模式驗證過：它把 `curriculum.md`、`organize_downloads.py`、`steps.md` 都規劃要搬（見 trial-log「額外發現」）。初學者照步驟 0 會待在課程資料夾，這時再跑步驟 5 的 `--apply`，課程檔案就會被搬走。這違反「只動臨時資料夾」的安全原則。 | 高 | 程式：來源參數是空字串（或去掉空白後是空的）時，印 `錯誤：沒有指定資料夾（$TMP 可能是空的）` 到 stderr，exit 2；並補一項測試。教材：步驟 3、5 前加一行 `[ -n "$TMP" ] \|\| echo "TMP 是空的，請回步驟 1"`，並提醒「關掉終端機後 TMP 會不見」。 | 程式（主要）＋教學設計 |
-| O-2 | `curriculum.md` 第 1 堂小活動 1「在 Python 互動模式輸入」 | 教材沒說怎麼進入或離開互動模式（輸入 `python` → 看到 `>>>` → 用 `exit()` 離開）。另外 Git Bash（mintty）直接打 `python` 時，互動模式常常卡住沒有反應，有時要改用 `winpty python` 或 `python -i`。**待驗證**：我的執行環境不是互動式終端機，沒辦法實測卡住的現象；我改用 `python -c` 確認輸出是 `photo.JPG photo .JPG .jpg`。 | 中 | 第 1 堂加一小段：「輸入 `python` 會出現 `>>>`；若沒反應改用 `winpty python`；結束輸入 `exit()`」。或改成「把程式存成 `lesson1.py` 再用 `python lesson1.py` 執行」。 | 教學設計 |
-| O-3 | `curriculum.md` 第 2～5 堂小活動（「寫一段程式」「寫迴圈印出 `$TMP` 第一層」） | 沒說程式要寫在哪個檔案、怎麼執行。第 3 堂要在 Python 裡讀 `$TMP` 路徑，但還沒教 `sys.argv` 或 `os.environ`，初學者不知道怎麼把 Bash 變數交給 Python。 | 中 | 每堂指定練習檔名（如 `lesson3.py`），給起手式，例如 `import sys; folder = Path(sys.argv[1])`，執行時用 `python lesson3.py "$TMP"`；或直接請學員把 `echo "$TMP"` 的路徑貼進程式。 | 教學設計 |
-| O-4 | `curriculum.md` 練習二預期解「驗證方法」第 1、3 步 | 寫的是 `ls -R "$TMP" > before.txt`，括號又說「存在 `$TMP` 外面」。實際上它會存在**目前資料夾**（課程資料夾），留下 `before.txt`、`after.txt` 兩個垃圾檔，而且第 3 節的清理指令 `rm -rf "$TMP"` 不會刪到它們。steps.md 用的是 `"$TMP-before.txt"`，兩份文件寫法不一致，初學者會搞混。 | 低 | 練習二改成跟 steps.md 一樣用 `"$TMP-before.txt"`／`"$TMP-after.txt"`，清理時一併 `rm -f`。 | 教學設計 |
-| O-5 | `steps.md` 步驟 7；`organize_downloads.py` 錯誤訊息 | 使用者輸入的是 `C:/.../不存在`（斜線），錯誤訊息印的卻是 `C:\...\不存在`（反斜線）。初學者可能以為路徑被改掉了。steps.md 只寫 `...不存在`，不算錯，但沒有說明為什麼斜線方向不同。 | 低 | 錯誤訊息改用 `source.as_posix()`，跟預覽輸出的斜線一致；或在 steps.md 註明「Windows 會顯示成反斜線，這是正常的」。 | 程式（或教學設計擇一） |
-| O-6 | `steps.md` 步驟 0、步驟 2 的「你應該看到」 | 步驟 0 的 `ls` 實際還會看到 `TASK.md`、`out`、`__pycache__`（跑過測試後會出現），steps.md 沒提，初學者可能以為多了東西是錯的。步驟 2 寫成同一行用空白隔開，但 `ls -R` 依終端機寬度和是否導向，也可能一行一個。 | 低 | 步驟 0 加註「可能還有其他檔案或 `__pycache__`，不用理會」；步驟 2 加註「排列方式可能不同，名稱對得上就好」。 | 教學設計 |
-
-## 已檢查、沒有障礙的地方
-
-- `curriculum.md` 第 3 節建臨時資料夾的做法：用 `cygpath -m` 的版本可以正常運作；不加 `cygpath` 會得到 `錯誤：找不到資料夾 \tmp\tmp.xxx`，跟文件說明一致。
-- 第 1 堂 `.suffix` 示範、第 5 堂 `table.XLSX`／`archive.tar.gz`／`.gitignore` 的預測題：實際結果跟教材答案一致。
-- 程式規格 5.2～5.6（分類表、只掃第一層、預覽不建資料夾、同名不覆寫、`report_1_1.txt`、空資料夾、來源不存在或不是資料夾時 exit 2）：全部照規格運作。
-- 測試：任務指定的 `python -m unittest discover -s . -p 'test_*.py' -v` 不加 `PYTHONUTF8` 也是 8 項全過。
-- 三題練習的預期解：跟實際執行結果完全一致。
-- 沒有修改任何程式或教材，也沒有碰 `~/Downloads`。
-
----
-
-## 重驗結果
-
-> 依 `out/prompt-試學-recheck.md` 重驗（受驗版本 `748ca0a` + `8a51ca9`），實際命令與輸出見 `out/trial-log.md`「重驗（第 2 輪）」。
-
-| 編號 | 結果 | 證據 |
-| --- | --- | --- |
-| O-1 | ✅ 已解決 | 程式 `main()` 遇到空白來源會 exit 2，訊息為 `錯誤：沒有指定資料夾（$TMP 可能是空的，請回步驟 1 重新建立）`。實測 `TMP=""` 的預覽、`--apply`、`"   " --apply` 都是 exit 2，目前資料夾 `diff` 無差異、檔案 3 → 3（trial-log R1）。新增測試 `test_empty_source_argument` 通過。steps.md 步驟 1 加了「TMP 只存在這個視窗」的警告，步驟 3／5／7 加了檢查行；curriculum 安全原則加了第 5 條。（檢查行本身的小缺點見 N-1。） |
-| O-2 | ✅ 已解決（文件面） | curriculum 第 1 堂新增「怎麼進出 Python 互動模式」：`python` → `>>>`、卡住時按 Ctrl+C 改用 `winpty python`、`exit()` 離開，另提供 `lesson1.py` 替代做法。**待驗證**：Git Bash 互動模式會不會卡住，以及 `winpty` 能不能解決，我的環境不是互動式終端機，仍無法實測；替代做法 `python lesson1.py` 等同 `python -c`，已確認可行。 |
-| O-3 | ✅ 已解決 | 第 2～5 堂都指定了練習檔名和執行方式，並附起手式；第 3、5 堂說明 `sys.argv[1]` 就是 `$TMP`。四個起手式原樣執行都能跑，輸出合理（trial-log R3）。 |
-| O-4 | ✅ 已解決 | 練習二改用 `"$TMP-before.txt"`／`"$TMP-after.txt"`，跟 steps.md 一致，並新增第 6 步清理 `rm -f`。 |
-| O-5 | ✅ 已解決 | 錯誤訊息改用 `as_posix()`。實測 `錯誤：找不到資料夾 C:/Users/.../tmp.sJpQY3ELWh/不存在`、`錯誤：C:/.../images/photo.JPG 不是資料夾`，都是斜線；測試也多了 `assertNotIn("\\", err)`。steps.md 步驟 7 的預期同步改了。 |
-| O-6 | ✅ 已解決 | steps.md 步驟 0 加註「可能還有 `TASK.md`、`out`、`__pycache__` 等，不用理會」；步驟 2 加註「排列方式可能不同，例如一行一個」。 |
-
-### 新發現的障礙
+> 依據：`out/trial-log.md` 的實際操作結果。程式與教材都沒有修改，只回報。
 
 | 編號 | 位置（哪份文件哪一步） | 障礙描述 | 嚴重度（高/中/低） | 建議修正 | 該退回給（教學設計/程式） |
 | --- | --- | --- | --- | --- | --- |
-| N-1 | `steps.md` 步驟 3（同樣寫法見步驟 5、7） | `[ -n "$TMP" ] \|\| echo "TMP 是空的，請回步驟 1"` 只印提示、不會中止。初學者把整段一起貼上時，下一行 `ls -R "$TMP" > "$TMP-before.txt"` 照樣執行，會在目前資料夾（通常是課程資料夾）建立一個空檔 `-before.txt`。檔名開頭是 `-`，初學者用 `rm -before.txt` 刪不掉（要 `rm -- -before.txt`）。程式本身有擋住，不會搬檔，所以只是留下垃圾檔。 | 低 | 把檢查行獨立成一個程式碼區塊，寫明「看到這行就停」；或把步驟 3 的指令包成 `if [ -z "$TMP" ]; then echo "TMP 是空的，請回步驟 1"; else ls -R "$TMP" > "$TMP-before.txt" && PYTHONUTF8=1 python organize_downloads.py "$TMP"; fi`。 | 教學設計 |
-| N-2 | `curriculum.md` 第 3、5 堂起手式（`folder = Path(sys.argv[1])`） | 執行時漏掉 `"$TMP"`（只打 `python lesson3.py`）會出現一大段 `IndexError: list index out of range` traceback，初學者看不懂。另外如果 `$TMP` 是空的，`Path("")` 會掃描目前資料夾；這只是讀取、不會搬檔，但印出的是課程資料夾的清單，容易讓人搞混。 | 低 | 起手式加防呆：參數不足或是空字串時，印出用法 `python lesson3.py "$TMP"`（TMP 不可為空）並 `sys.exit(2)`；或在小活動說明「看到 IndexError 代表忘了加 "$TMP"」。 | 教學設計 |
+| O-1 | `curriculum.md` 第 3 堂小活動、第 6 堂小活動、練習 2 預期解 | 範例都寫 `demo=$(mktemp -d)` 再 `python organize_downloads.py "$demo"`。實測 Python 收到 `/tmp/tmp.xxx`，回報「錯誤：來源資料夾不存在：\tmp\tmp.xxx」並 exit 2。拿掉 `MSYS_NO_PATHCONV`、開乾淨的 bash 也一樣失敗。初學者照課綱做，第一次執行就會卡住，還會誤以為程式壞了。 | 高 | 課綱所有範例統一改成 `demo=$(cygpath -m "$(mktemp -d)")`（和 `steps.md` 步驟 1 一致），並在第 3 堂加一句說明，或直接指向 `steps.md` 的 💡 說明。 | 教學設計 |
+| O-2 | `steps.md` 步驟 1 的 💡 說明 | 說明寫 Windows 版 Python「**有時**」看不懂 `/tmp/...`，「設了 `MSYS_NO_PATHCONV=1` 就**一定**看不懂」。實測沒設也看不懂，讀者可能以為沒設就可以省略 `cygpath`。 | 低 | 改成「Windows 版 Python 看不懂 Git Bash 的 `/tmp/...` 路徑，一律包 `cygpath -m`」。 | 程式（`steps.md` 由程式 Agent 撰寫） |
+| O-3 | `curriculum.md` 練習 2、`steps.md` 步驟 3～4 | `before.txt` / `after_preview.txt` 寫在「目前目錄」，也就是專案資料夾。初學者若先 `cd "$demo"` 再執行，比對檔會被當成第一層檔案一起整理（`.txt` → `documents/`），`diff` 結果和預期不符；放在專案資料夾也會留下 git 未追蹤檔（步驟 8 才刪）。 | 低 | 比對檔改放另一個臨時資料夾，例如 `cmp=$(cygpath -m "$(mktemp -d)")`，`ls -R "$demo" > "$cmp/before.txt"`；或註明「不要在 `$demo` 裡面執行」。 | 教學設計（課綱）＋程式（`steps.md`） |
+| O-4 | `curriculum.md` 第 2 節先備知識、第 6 堂小活動 | 課綱沒提 `export PYTHONUTF8=1`，在系統編碼 cp950 的 Windows 上，程式的中文訊息（例如「共 7 個檔案…」）可能變亂碼。`steps.md` 步驟 0 有寫，課綱沒有。 | 低 | 第 2 節先備知識補一行「先執行 `export PYTHONUTF8=1`」。 | 教學設計 |
+| O-5 | `curriculum.md` 第 4 堂 vs `steps.md` 步驟 7 | 第 4 堂寫 `python -m unittest -v`，`steps.md` 寫 `python -m unittest discover -s . -p 'test_*.py' -v`。兩個都能跑，但初學者會疑惑哪個才對。 | 低 | 擇一統一，或在第 4 堂註明「兩種寫法效果相同，`discover` 是完整寫法」。 | 教學設計 |
+| O-6 | `steps.md` 步驟 2、步驟 6 的「你應該看到」 | 預期輸出是 `ls -R` 在互動式終端機的排列（一列多個檔名）；輸出被導向或在非互動環境時會一行一個。內容相同，只有排版不同，不影響操作。 | 低 | 可加一句「排列方式可能不同，檔名一樣就對了」。 | 程式（`steps.md`） |
 
-結論：上一輪的 6 項障礙都已解決，O-2 有一部分因環境限制仍待驗證；新發現 2 項都是低嚴重度，不影響安全，也不影響主流程。
+## 檢查過、沒有障礙的地方
+
+- `curriculum.md` 第 1～6 堂的學習重點與程式概念，和 `organize_downloads.py` 的實作一致（`suffix.lower()`、查表、`iterdir()` + `is_file()`、`reserved` 集合、`argparse --apply`）。
+- 4.3 分類表：練習 1 實跑 5/5 符合。
+- 4.4 掃描範圍：`subdir/nested.txt` 在預覽和 `--apply` 都沒被處理。
+- 4.5 同名與同批次碰撞：情境 B 與練習 3 都得到 `report_1.txt`、`report_1_1.txt`，原檔 `documents/report.txt` 內容不變；`steps.md` 6-加碼得到 `report_2.txt`、`report_1_1.txt`，和文件逐字一致。
+- 4.2 錯誤處理：來源不存在、來源不是資料夾，都印清楚訊息並以 exit 2 結束。
+- `steps.md` 步驟 0～8 的「你應該看到」全部和實際輸出一致（O-6 的排版差異除外）。
+- 單元測試 9 項全數通過，與 `steps.md` 步驟 7 預期相符。
+- 安全原則：教材與測試都沒有出現對 `~/Downloads` 執行的指令。
